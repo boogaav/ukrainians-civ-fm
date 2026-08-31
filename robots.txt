@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://ukraine.civ.fm/sitemap.xml

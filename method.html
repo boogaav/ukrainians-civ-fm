@@ -1,0 +1,461 @@
+<title>How the Pantheon Is Built</title>
+<meta charset="utf-8">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230B1220'/%3E%3Cpath d='M16 5l3.3 7.2L27 13.2l-5.7 5.4 1.5 7.7L16 22.5 9.2 26.3l1.5-7.7L5 13.2l7.7-1z' fill='%23E3B34C'/%3E%3C/svg%3E">
+<meta name="description" content="The inclusion rules, what the method gets wrong, and the form for corrections.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Ukrainians">
+<meta property="og:title" content="How It Is Built · Ukrainians">
+<meta property="og:description" content="The inclusion rules, what the method gets wrong, and the form for corrections.">
+<meta property="og:url" content="https://ukraine.civ.fm/method.html">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://ukraine.civ.fm/method.html">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Forum&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --lapis-0:#080D18; --lapis-1:#0B1220; --lapis-2:#111C33; --lapis-3:#1A2845;
+    --gold:#E3B34C; --gold-hi:#F2CD6E; --gold-dim:#8A6E33;
+    --ink:#F0EAD9; --ink-mute:#8C96AB; --ink-faint:#5A6478;
+    --warn:#C98A5B;
+    --display:'Forum',Georgia,serif;
+    --body:'IBM Plex Sans',-apple-system,'Segoe UI',sans-serif;
+    --mono:'IBM Plex Mono',ui-monospace,monospace;
+  }
+  html{background:var(--lapis-1)}
+  body{background:var(--lapis-1);color:var(--ink);font-family:var(--body);margin:0;-webkit-font-smoothing:antialiased}
+  header{padding:46px 26px 10px;text-align:center;
+    background:radial-gradient(1100px 440px at 50% -160px,#1B2A4D 0%,transparent 72%),var(--lapis-1)}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--gold);margin:0 0 14px}
+  h1{font-family:var(--display);font-weight:400;margin:0;font-size:clamp(32px,5.4vw,52px);letter-spacing:.05em;line-height:1.07;text-wrap:balance}
+  h1 .gold{color:var(--gold-hi)}
+  .lede{margin:18px auto 0;color:var(--ink-mute);font-size:15px;max-width:60ch;line-height:1.65}
+  .siblings{display:flex;gap:18px;justify-content:center;flex-wrap:wrap;margin-top:20px}
+  .siblings a{color:var(--gold);text-decoration:none;font-size:13px;border-bottom:1px solid var(--gold-dim);padding-bottom:1px}
+  .siblings a:hover{color:var(--gold-hi)}
+  .lang{display:flex;border:1px solid var(--lapis-3);border-radius:2px;overflow:hidden;margin:22px auto 0;width:max-content}
+  .lang button{background:transparent;border:0;color:var(--ink-mute);font:12px var(--mono);letter-spacing:.08em;padding:8px 14px;cursor:pointer}
+  .lang button.on{background:var(--gold);color:var(--lapis-0);font-weight:500}
+
+  main{max-width:760px;margin:0 auto;padding:16px 24px 40px}
+  section{padding-top:44px}
+  h2{font-family:var(--display);font-weight:400;font-size:26px;letter-spacing:.03em;margin:0 0 6px;color:var(--ink)}
+  h2 .num{font:11px var(--mono);color:var(--gold-dim);letter-spacing:.2em;display:block;margin-bottom:8px}
+  .rule{height:1px;background:linear-gradient(90deg,var(--gold-dim),transparent);margin:14px 0 20px}
+  p{color:var(--ink-mute);font-size:15px;line-height:1.72;margin:0 0 15px;max-width:66ch}
+  p strong{color:var(--ink);font-weight:600}
+  p .n{color:var(--gold-hi);font-family:var(--mono);font-size:14px;font-weight:500}
+  a.inline{color:var(--gold);text-decoration:none;border-bottom:1px solid var(--gold-dim)}
+  a.inline:hover{color:var(--gold-hi)}
+
+  /* funnel / branch table */
+  .branches{display:flex;flex-direction:column;gap:9px;margin:20px 0 8px}
+  .br{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;
+    background:var(--lapis-2);border:1px solid var(--lapis-3);border-left:2px solid var(--gold-dim);
+    border-radius:2px;padding:11px 14px}
+  .br .nm{font-size:14px;color:var(--ink)}
+  .br .nm em{display:block;font-style:normal;color:var(--ink-faint);font-size:12.5px;margin-top:3px;line-height:1.45}
+  .br .ct{font:14px var(--mono);color:var(--gold-hi);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .sum{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+    border-top:1px solid var(--lapis-3);margin-top:4px;padding-top:12px}
+  .sum .nm{font-size:14px;color:var(--ink)}
+  .sum .ct{font:18px var(--mono);color:var(--gold-hi);font-variant-numeric:tabular-nums}
+
+  /* stat row */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:22px 0 6px}
+  .stat{background:var(--lapis-2);border:1px solid var(--lapis-3);border-radius:2px;padding:14px 15px}
+  .stat .v{font:26px var(--display);color:var(--gold-hi);font-variant-numeric:tabular-nums;line-height:1.1}
+  .stat .k{font-size:12px;color:var(--ink-mute);margin-top:6px;line-height:1.45}
+
+  /* bar chart */
+  .bars{display:flex;flex-direction:column;gap:7px;margin:20px 0 6px}
+  .bar{display:grid;grid-template-columns:170px 1fr auto;gap:11px;align-items:center}
+  .bar .lb{font-size:12.5px;color:var(--ink-mute);text-align:right;line-height:1.3}
+  .bar .track{background:var(--lapis-2);border-radius:2px;height:15px;overflow:hidden}
+  .bar .fill{height:100%;background:linear-gradient(90deg,var(--gold-dim),var(--gold));
+    border-radius:0 4px 4px 0;min-width:2px}
+  .bar .vl{font:12px var(--mono);color:var(--gold-hi);font-variant-numeric:tabular-nums;min-width:38px}
+  .cap{font-size:12.5px;color:var(--ink-faint);line-height:1.55;margin-top:12px;max-width:66ch}
+
+  /* three-page comparison */
+  .pages{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin:20px 0 6px}
+  .pg{background:var(--lapis-2);border:1px solid var(--lapis-3);border-top:2px solid var(--gold);border-radius:2px;padding:15px 16px}
+  .pg h3{font-family:var(--display);font-weight:400;font-size:17px;margin:0 0 4px;color:var(--gold-hi);letter-spacing:.02em}
+  .pg .sortby{font:10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:9px}
+  .pg p{font-size:13px;line-height:1.6;margin:0;color:var(--ink-mute)}
+
+  /* limits */
+  .limit{border-left:2px solid var(--warn);background:rgba(201,138,91,.05);
+    padding:13px 16px;margin:0 0 11px;border-radius:0 2px 2px 0}
+  .limit h4{margin:0 0 5px;font-size:14px;color:var(--ink);font-weight:600}
+  .limit p{margin:0;font-size:13.5px;line-height:1.62;color:var(--ink-mute)}
+
+  /* corrections form */
+  .form{background:var(--lapis-2);border:1px solid var(--lapis-3);border-top:2px solid var(--gold);
+    border-radius:2px;padding:20px 22px;margin-top:20px}
+  .field{margin-bottom:14px}
+  .field label{display:block;font:10px var(--mono);letter-spacing:.16em;text-transform:uppercase;
+    color:var(--ink-faint);margin-bottom:6px}
+  .field input,.field select,.field textarea{
+    width:100%;box-sizing:border-box;background:var(--lapis-1);border:1px solid var(--lapis-3);
+    color:var(--ink);border-radius:2px;padding:9px 12px;font:14px var(--body);outline:none}
+  .field textarea{min-height:92px;resize:vertical;line-height:1.55}
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--gold-dim)}
+  .field .hint{font-size:11.5px;color:var(--ink-faint);margin-top:5px;line-height:1.45}
+  .submit{background:var(--gold);border:0;color:var(--lapis-0);font:14px var(--body);font-weight:600;
+    border-radius:2px;padding:10px 26px;cursor:pointer;letter-spacing:.02em}
+  .submit:hover{background:var(--gold-hi)}
+  .submit:disabled{opacity:.45;cursor:not-allowed}
+  .note{font-size:12.5px;line-height:1.6;color:var(--ink-faint);margin:12px 0 0}
+  .status{margin-top:12px;font-size:13.5px;line-height:1.55;display:none}
+  .status.on{display:block}
+  .status.ok{color:var(--gold-hi)}
+  .status.err{color:var(--warn)}
+  .reports{margin-top:26px;display:flex;flex-direction:column;gap:9px}
+  .rep{background:var(--lapis-2);border:1px solid var(--lapis-3);border-radius:2px;padding:11px 14px}
+  .rep .rh{display:flex;gap:9px;align-items:baseline;flex-wrap:wrap}
+  .rep .kind{font:9.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--gold);
+    border:1px solid rgba(138,110,51,.5);border-radius:999px;padding:2px 8px}
+  .rep .subj{font-size:13.5px;color:var(--ink);font-weight:600}
+  .rep .when{font:11px var(--mono);color:var(--ink-faint);margin-left:auto}
+  .rep .msg{font-size:13px;color:var(--ink-mute);line-height:1.55;margin-top:6px;white-space:pre-wrap;overflow-wrap:anywhere}
+  .repsHead{font:10px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);margin-top:26px}
+  footer{max-width:760px;margin:0 auto;padding:40px 24px 60px;color:var(--ink-faint);font-size:12.5px;line-height:1.75;text-align:center}
+  footer a{color:var(--ink-mute)}
+  @media (max-width:620px){
+    .bar{grid-template-columns:110px 1fr auto}
+    .bar .lb{font-size:11.5px}
+  }
+</style>
+
+<header>
+  <p class="kicker" id="ui-kicker"></p>
+  <h1 id="ui-title"></h1>
+  <p class="lede" id="ui-lede"></p>
+  <div class="siblings">
+    <a id="lk0" href="./" target="_blank" rel="noopener"></a>
+    <a id="lk1" href="./timeline.html" target="_blank" rel="noopener"></a>
+    <a id="lk2" href="./roots.html" target="_blank" rel="noopener"></a>
+    <a id="lk3" href="./heroes.html" target="_blank" rel="noopener"></a>
+  </div>
+  <div class="lang"><button id="lang-en" class="on">EN</button><button id="lang-uk">УКР</button></div>
+</header>
+
+<main id="main"></main>
+<footer id="ui-footer"></footer>
+
+<script id="DATA" type="application/json">{"total":110921,"bBorn":89009,"bCit":53835,"bHist":3285,"bEth":515,"male":88718,"female":21515,"femalePct":20,"figures":4922,"sport":1430,"sportPct":29,"inUA":4323,"portraits":3917,"heroes":898,"against":12,"regions":[["Kyiv",543],["Lviv Oblast",454],["Odesa Oblast",346],["Kharkiv Oblast",297],["Dnipropetrovsk Oblast",241],["Donetsk Oblast",215],["Autonomous Republic of Crimea",155],["Poltava Oblast",147],["Vinnytsia Oblast",139],["Luhansk Oblast",132],["Chernihiv Oblast",129],["Kyiv Oblast",126],["Zaporizhzhia Oblast",121],["Ivano-Frankivsk Oblast",119]],"regionsUk":{"Kyiv":"Київ","Lviv Oblast":"Львівська область","Odesa Oblast":"Одеська область","Kharkiv Oblast":"Харківська область","Dnipropetrovsk Oblast":"Дніпропетровська область","Donetsk Oblast":"Донецька область","Autonomous Republic of Crimea":"Автономна Республіка Крим","Poltava Oblast":"Полтавська область","Vinnytsia Oblast":"Вінницька область","Luhansk Oblast":"Луганська область","Chernihiv Oblast":"Чернігівська область","Kyiv Oblast":"Київська область","Zaporizhzhia Oblast":"Запорізька область","Ivano-Frankivsk Oblast":"Івано-Франківська область"}}</script>
+<script>
+"use strict";
+const S=JSON.parse(document.getElementById('DATA').textContent);
+const nf=n=>n.toLocaleString(LANG==='uk'?'uk-UA':'en-US');
+let LANG='en';
+try{ if(localStorage.getItem('pantheon-lang')==='uk') LANG='uk'; }catch(e){}
+
+const T={
+ en:{
+  kicker:'Methodology · Методологія',
+  title:'HOW THE PANTHEON <span class="gold">IS BUILT</span>',
+  lede:'Every pantheon is an argument about who belongs. This one is assembled by rules rather than by taste, so the rules should be readable — along with what they include, what they miss, and where they are simply wrong.',
+  lk0:'← Ukrainians', lk1:'← The timeline', lk2:'← Ukrainian Roots', lk3:'★ Heroes of Ukraine',
+  s1t:'The question', s1n:'01',
+  s1:[`"Everyone who contributed to the Ukrainian nation" has no neutral definition. A nation whose borders, rulers and official languages changed a dozen times in five centuries produces people who are Ukrainian in one sense and not in another: born in Odesa under the tsars, writing in Russian, buried in Paris. Any list has to choose.`,
+      `This project makes the choice explicitly and then applies it mechanically. Inclusion is not a judgement about anyone's loyalty or identity — it is a record of four documented, checkable ties. Everyone shown carries at least one, and each page names which ones on the person's own card.`],
+  s2t:'Where the data comes from', s2n:'02',
+  s2:[`Everything comes from <a class="inline" href="https://www.wikidata.org" target="_blank" rel="noopener">Wikidata</a>, the structured database underneath every language edition of Wikipedia. It is CC0, machine-readable, and gives every person a stable identifier, so a figure can be joined across languages, award registers and future sources without matching names.`,
+      `Nothing is scraped from Wikipedia prose. Each field on a card traces to a specific Wikidata property: birth and death dates, place of birth, citizenship, ethnicity, occupation, notable works, portrait, and the state honours. The diaspora is the one exception, and its own section below says why.`],
+  s3t:'Who counts as Ukrainian', s3n:'03',
+  s3a:`Four ties, each a separate database query. A person entering through any one of them is in the pantheon; most enter through several. The counts overlap, so they do not sum to the total.`,
+  branches:[
+    ['Born on the territory of modern Ukraine','Place of birth lies inside today\'s borders, whatever state governed it at the time.',S.bBorn],
+    ['Citizenship of Ukraine','Citizen of the independent state, 1991 onward.',S.bCit],
+    ['Citizenship of a predecessor state','Kyivan Rus, Galicia–Volhynia, the Cossack Hetmanate, the Zaporizhian Sich, the UNR and West UNR, the Ukrainian State, Carpatho-Ukraine, the Ukrainian SSR.',S.bHist],
+    ['Ukrainian ethnicity','Recorded ethnic identity, which carries the diaspora who were never citizens.',S.bEth],
+  ],
+  sumLabel:'Distinct people in the union',
+  s3b:`That union is the full universe: <span class="n">${nf(S.total)}</span> people. It is far larger than any page can show, and most of it is thinly documented — a name, a date, one article in one language.`,
+  s4t:'Who actually gets shown', s4n:'04',
+  s4:[`Showing a hundred thousand people would be a database, not a pantheon. The timeline shows the <span class="n">${nf(S.figures)}</span> figures documented in <strong>ten or more Wikipedia language editions</strong>, and sizes them in four tiers by that same count: the most-covered carry a portrait medallion and a name, the rest are golden tesserae.`,
+      `Language-edition count is a proxy for how widely a person is remembered, not for how much they mattered. It is the least bad signal available at this scale — it is cross-lingual, hard to game, and needs no editorial judgement — but it is a popularity measure, and section 06 is about the ways it distorts.`],
+  s5t:'Why the three pages sort differently', s5n:'05',
+  s5:`The same data is arranged three ways, because the three questions are not the same question.`,
+  pages:[
+   ['The timeline','sorted by time','Chronological by birth, newest at the top, running back to the ancient steppe. Prominence only sets a mark\'s size, never its position — so the shape you see is demographic: where the nation\'s documented lives cluster.'],
+   ['Ukrainian Roots','sorted by prominence','The modern era, born 1900 onward, merged with the worldwide diaspora. Here fame ordering is honest: the question the page answers is "who is widely known to have Ukrainian roots", so the most-covered come first.'],
+   ['Heroes of Ukraine','sorted alphabetically','Deliberately not by fame. Most recipients hold fewer than five articles and many were decorated for the act that killed them; ranking them by renown would rank a soldier below a footballer. It is an alphabetical roll of honour, as a memorial is.'],
+  ],
+  s6t:'Where they come from', s6n:'06',
+  s6:`Of the <span class="n">${nf(S.figures)}</span> figures on the timeline, <span class="n">${nf(S.inUA)}</span> have a recorded birthplace inside Ukraine. The distribution is its own kind of history — university towns, imperial ports, and the industrial east.`,
+  s6cap:'Regions of birth among timeline figures. Kyiv, Sevastopol and Crimea are counted as their own units, matching Ukraine\'s administrative structure.',
+  s7t:'What this gets wrong', s7n:'07',
+  limits:[
+   ['A popularity measure, inherited',`Prominence is Wikipedia coverage, and Wikipedia is uneven. Russian- and English-language editing history shapes who has articles at all, which means the imperial and Soviet periods are better covered than the Cossack era, and figures the Soviet canon promoted still enjoy that lift.`],
+   ['Women are under-represented',`Across the whole universe, <span class="n">${nf(S.male)}</span> people are recorded as men and <span class="n">${nf(S.female)}</span> as women — about <strong>${S.femalePct}% women</strong>. That is a fact about who got written down over the centuries and about who Wikipedia covers today, not about who contributed. No correction is applied; hiding it would be worse.`],
+   ['Athletes crowd the modern end',`<span class="n">${nf(S.sport)}</span> of the timeline's figures are sportspeople — roughly ${S.sportPct}% — because footballers reliably get short articles in many languages. Recent decades therefore look more athletic than they were. The domain filters exist largely so this can be set aside.`],
+   ['Birthplace is not identity',`The largest inclusion branch is birth on Ukrainian territory, and it necessarily admits people who never considered themselves Ukrainian, including some hostile to it. The tie is stated plainly on every card so you can judge it; it is not a claim about allegiance.`],
+   ['Contested figures are present by construction',`Because the rules are mechanical, they include people who remain bitterly disputed inside Ukraine and beyond. This is a record of documented ties, not an honour roll, and the Heroes page — which <em>is</em> an honour roll — is a separate, official list.`],
+   ['The diaspora depends on categories',`The Roots page draws descent from English Wikipedia's "people of Ukrainian descent" category tree, which is edited by hand and applied unevenly. People with well-known Ukrainian ancestry are missing simply because nobody added the category; a few are curated in by hand, and each is marked.`],
+   ['Recent honours are incomplete',`Wikidata's coverage of awards conferred during the full-scale war lags badly. The Heroes page is not the official register and undercounts the last several years.`],
+  ],
+  sAt:'The badge for those who acted against Ukraine', sAn:'08',
+  sA:[`A pantheon assembled by birthplace and citizenship necessarily contains people who turned on the country. They are marked — but by a <strong>specific documented fact</strong>, never by a judgement about their loyalty. The badge on a person's card names the fact and the year, and that is all it claims.`,
+      `Four grounds qualify: a <strong>treason conviction or charge</strong> in a Ukrainian court; office held in a <strong>Russian occupation administration</strong>; <strong>directing or enabling the invasion</strong>, evidenced by an ICC warrant or by sanctions designations from the EU, UK and US; and a directing role in the <strong>Holodomor</strong>. Corruption cases and mere association are not grounds, because they are not the same claim.`,
+      `The list is short and deliberately conservative: <span class="n">${nf(S.against)}</span> people, each of whom is already in the pantheon on their own merits and none of whom is marked on anyone's opinion. Historical figures beyond the Holodomor are out of scope for now — "against Ukraine" across five centuries is a question of historical judgement rather than of records, and this project has no mechanism for making that judgement well. If you think someone is wrongly marked, or obviously missing, the form below is the place to say so.`],
+  s8t:'Corrections and missing people', s8n:'09',
+  s8b:`Two lighter signals sit on the cards themselves. Hovering a person offers <strong>Add to Pantheon</strong> and <strong>Remove from this list</strong> — one decision per person per viewer, changeable at any time. A removal also fades that person out of your own view; it never changes what anyone else sees. Those decisions are counted in aggregate, and they are a vote on belonging, not a substitute for the report form below, which is where an actual correction goes.`,
+  s8:`The gaps above are the known ones. If you can see a person who should be here, a tie recorded wrongly, or a birthplace in the wrong oblast, that is the most useful thing you can contribute — corrections go back into the source data and improve every page at once.`,
+  fKind:'What kind of report', fSubj:'Person or page', fMsg:'What should change',
+  kinds:[['missing','A person is missing'],['wrong','Details are wrong'],['place','Wrong birthplace or region'],['disputed','Inclusion is disputed'],['other','Something else']],
+  subjPh:'Name, or a Wikidata Q-number if you have one',
+  msgPh:'What is wrong, and — if you can — where the correct information can be checked.',
+  msgHint:'A source makes a correction actionable: a Wikipedia article, an archive, an official register.',
+  send:'Send report', sending:'Sending…',
+  pubNote:'Reports are visible to everyone who opens this page. Please don\'t include personal contact details.',
+  okMsg:'Thank you — your report was recorded.',
+  errMsg:'That could not be saved. Please try again in a moment.',
+  offMsg:'The report form is unavailable in this view, so nothing can be submitted from here.',
+  fullMsg:'The report log is full, so new reports cannot be stored right now.',
+  slowMsg:'Too many reports too quickly. Please wait a moment and try again.',
+  emptyMsg:'Please describe what should change.',
+  repsHead:'Reports so far',
+  noReps:'No reports yet.',
+  footer:`Built from <a href="https://www.wikidata.org" target="_blank" rel="noopener">Wikidata</a>, which is CC0. Counts were taken when this page was last generated and drift as Wikidata grows. This is an independent project and not an official register of anything.`
+ },
+ uk:{
+  kicker:'Методологія · Methodology',
+  title:'ЯК ПОБУДОВАНО <span class="gold">ПАНТЕОН</span>',
+  lede:'Кожен пантеон — це твердження про те, хто до нього належить. Цей зібрано за правилами, а не за смаком, тож правила мають бути читними — разом із тим, що вони охоплюють, що втрачають і де просто помиляються.',
+  lk0:'← Українці', lk1:'← Стрічка часу', lk2:'← Українське коріння', lk3:'★ Герої України',
+  s1t:'Питання', s1n:'01',
+  s1:[`«Усі, хто долучився до української нації» не має нейтрального визначення. Нація, чиї кордони, влада й офіційні мови змінювалися десятки разів за пʼять століть, породжує людей, які є українцями в одному сенсі й не є в іншому: народжений в Одесі за царів, писав російською, похований у Парижі. Будь-який перелік мусить обирати.`,
+      `Цей проєкт робить вибір відкрито, а тоді застосовує його механічно. Включення не є судженням про чиюсь лояльність чи ідентичність — це запис про чотири задокументовані, перевірні звʼязки. Кожен показаний має щонайменше один, і картка кожної людини називає, які саме.`],
+  s2t:'Звідки дані', s2n:'02',
+  s2:[`Усе походить із <a class="inline" href="https://www.wikidata.org" target="_blank" rel="noopener">Вікіданих</a> — структурованої бази під усіма мовними розділами Вікіпедії. Вона під ліцензією CC0, машиночитна й дає кожній людині сталий ідентифікатор, тож постать можна зіставляти між мовами, реєстрами нагород і майбутніми джерелами без звіряння імен.`,
+      `Нічого не вишкрібається з тексту Вікіпедії. Кожне поле картки походить із конкретної властивості Вікіданих: дати народження і смерті, місце народження, громадянство, етнічність, рід занять, відомі твори, портрет і державні відзнаки. Діаспора — єдиний виняток, і розділ нижче пояснює чому.`],
+  s3t:'Хто вважається українцем', s3n:'03',
+  s3a:`Чотири звʼязки, кожен — окремий запит до бази. Людина, що проходить хоча б за одним, потрапляє до пантеону; більшість проходить за кількома. Показники перетинаються, тож їхня сума не дорівнює підсумку.`,
+  branches:[
+    ['Народження на теренах сучасної України','Місце народження в межах сьогоднішніх кордонів, хоч би яка держава ними тоді володіла.',S.bBorn],
+    ['Громадянство України','Громадянство незалежної держави від 1991 року.',S.bCit],
+    ['Громадянство держави-попередниці','Київська Русь, Галицько-Волинське князівство, Гетьманщина, Запорозька Січ, УНР і ЗУНР, Українська Держава, Карпатська Україна, УРСР.',S.bHist],
+    ['Українська етнічність','Зафіксована етнічна ідентичність, що охоплює діаспору, яка ніколи не мала громадянства.',S.bEth],
+  ],
+  sumLabel:'Унікальних людей в обʼєднанні',
+  s3b:`Це обʼєднання і є повним всесвітом: <span class="n">${nf(S.total)}</span> людей. Він набагато більший, ніж може показати будь-яка сторінка, і здебільшого задокументований бідно — імʼя, дата, одна стаття однією мовою.`,
+  s4t:'Кого показано насправді', s4n:'04',
+  s4:[`Показати сто тисяч людей означало б базу даних, а не пантеон. Стрічка часу показує <span class="n">${nf(S.figures)}</span> постатей, описаних у <strong>десяти або більше мовних розділах Вікіпедії</strong>, і розподіляє їх на чотири рівні за тим самим показником: найбільш описані мають портретний медальйон та імʼя, решта — золоті тесери.`,
+      `Кількість мовних розділів — це показник того, наскільки широко людину памʼятають, а не наскільки вона важила. Це найменш поганий сигнал у такому масштабі: він міжмовний, його важко накрутити, і він не потребує редакторського присуду — але це показник популярності, і розділ 06 саме про те, як він викривляє.`],
+  s5t:'Чому три сторінки сортують по-різному', s5n:'05',
+  s5:`Ті самі дані впорядковано трьома способами, бо три питання — не одне питання.`,
+  pages:[
+   ['Стрічка часу','за часом','Хронологічно за народженням, найновіші вгорі, назад до давнього степу. Визначність задає лише розмір позначки, ніколи не місце — тож видима форма є демографічною: де скупчуються задокументовані життя нації.'],
+   ['Українське коріння','за визначністю','Новітня доба від 1900 року, поєднана зі світовою діаспорою. Тут упорядкування за славою чесне: сторінка відповідає на питання «хто широко відомий як людина з українським корінням», тож найбільш описані йдуть першими.'],
+   ['Герої України','за абеткою','Свідомо не за славою. Більшість відзначених мають менше пʼяти статей, і багато кого нагороджено за вчинок, що коштував життя; впорядкування за відомістю поставило б солдата нижче за футболіста. Це абеткова роль пошани, як і належить меморіалу.'],
+  ],
+  s6t:'Звідки вони', s6n:'06',
+  s6:`Із <span class="n">${nf(S.figures)}</span> постатей стрічки <span class="n">${nf(S.inUA)}</span> мають зафіксоване місце народження в Україні. Розподіл — це своя історія: університетські міста, імперські порти й промисловий схід.`,
+  s6cap:'Регіони народження серед постатей стрічки. Київ, Севастополь і Крим враховано як окремі одиниці, відповідно до адміністративного устрою України.',
+  s7t:'Де це помиляється', s7n:'07',
+  limits:[
+   ['Успадкований показник популярності',`Визначність — це покриття у Вікіпедії, а Вікіпедія нерівномірна. Історія редагування російською та англійською визначає, хто взагалі має статті: імперський і радянський періоди описані краще за козацьку добу, а постаті, яких підносив радянський канон, досі мають із цього перевагу.`],
+   ['Жінки представлені недостатньо',`У всьому всесвіті <span class="n">${nf(S.male)}</span> людей зафіксовано як чоловіків і <span class="n">${nf(S.female)}</span> як жінок — близько <strong>${S.femalePct}% жінок</strong>. Це факт про те, кого записували впродовж століть і кого описує Вікіпедія сьогодні, а не про те, хто долучався. Жодних поправок не застосовано; приховати це було б гірше.`],
+   ['Спортсмени переповнюють новітній край',`<span class="n">${nf(S.sport)}</span> постатей стрічки — спортсмени, приблизно ${S.sportPct}%, бо футболісти надійно отримують короткі статті багатьма мовами. Тому останні десятиліття видаються спортивнішими, ніж були. Фільтри за сферами існують значною мірою для того, щоб це відкласти.`],
+   ['Місце народження не є ідентичністю',`Найбільша гілка включення — народження на теренах України, і вона неминуче охоплює людей, які ніколи не вважали себе українцями, зокрема ворожих до України. Звʼязок прямо названо на кожній картці, щоб ви могли судити самі; це не твердження про вірність.`],
+   ['Суперечливі постаті присутні за побудовою',`Оскільки правила механічні, вони охоплюють людей, які лишаються гостро дискусійними в Україні й поза нею. Це запис задокументованих звʼязків, а не роль пошани; а сторінка Героїв, яка <em>саме</em> є роллю пошани, — окремий офіційний перелік.`],
+   ['Діаспора залежить від категорій',`Сторінка коріння бере походження з дерева категорій «people of Ukrainian descent» англійської Вікіпедії, яке ведуть вручну й застосовують нерівно. Люди з добре відомим українським походженням відсутні просто тому, що ніхто не додав категорію; кількох додано вручну, і кожного позначено.`],
+   ['Новітні відзнаки неповні',`Покриття Вікіданими нагород, присвоєних під час повномасштабної війни, суттєво відстає. Сторінка Героїв не є офіційним реєстром і применшує останні кілька років.`],
+  ],
+  sAt:'Позначка для тих, хто діяв проти України', sAn:'08',
+  sA:[`Пантеон, зібраний за місцем народження й громадянством, неминуче містить людей, які обернулися проти країни. Їх позначено — але за <strong>конкретним задокументованим фактом</strong>, а не за судженням про їхню лояльність. Позначка на картці називає факт і рік, і більшого не стверджує.`,
+      `Підстав чотири: <strong>вирок або обвинувачення в державній зраді</strong> в українському суді; посада в <strong>російській окупаційній адміністрації</strong>; <strong>керування вторгненням або його уможливлення</strong>, підтверджене ордером МКС чи санкціями ЄС, Британії та США; і керівна роль у <strong>Голодоморі</strong>. Корупційні справи та просто дотичність підставами не є, бо це інше твердження.`,
+      `Перелік короткий і свідомо стриманий: <span class="n">${nf(S.against)}</span> людей, кожна з яких уже присутня в пантеоні за власними підставами, і жодну не позначено на основі чиєїсь думки. Історичні постаті поза Голодомором наразі поза межами: «проти України» впродовж пʼяти століть — це питання історичного судження, а не записів, і цей проєкт не має способу робити таке судження добре. Якщо вважаєте, що когось позначено помилково або очевидно бракує — форма нижче саме для цього.`],
+  s8t:'Виправлення та відсутні люди', s8n:'09',
+  s8b:`Два легші сигнали є просто на картках. При наведенні пропонуються <strong>Додати до Пантеону</strong> та <strong>Прибрати з переліку</strong> — одне рішення на людину для кожного глядача, яке будь-коли можна змінити. Прибирання також приглушує цю людину у вашому власному перегляді; на те, що бачать інші, воно не впливає. Ці рішення враховуються сукупно; це голос щодо належності, а не заміна формі нижче, куди подають власне виправлення.`,
+  s8:`Перелічені прогалини — ті, що відомі. Якщо ви бачите людину, якої тут бракує, хибно записаний звʼязок або місце народження не в тій області — це найкорисніше, чим можна долучитися: виправлення повертаються у вихідні дані й покращують усі сторінки одразу.`,
+  fKind:'Тип повідомлення', fSubj:'Людина або сторінка', fMsg:'Що слід змінити',
+  kinds:[['missing','Бракує людини'],['wrong','Хибні відомості'],['place','Хибне місце народження'],['disputed','Включення спірне'],['other','Щось інше']],
+  subjPh:'Імʼя або Q-номер у Вікіданих, якщо знаєте',
+  msgPh:'Що не так і — якщо можете — де перевірити правильні відомості.',
+  msgHint:'Джерело робить виправлення придатним до дії: стаття у Вікіпедії, архів, офіційний реєстр.',
+  send:'Надіслати', sending:'Надсилання…',
+  pubNote:'Повідомлення бачить кожен, хто відкриє цю сторінку. Будь ласка, не додавайте особистих контактних даних.',
+  okMsg:'Дякуємо — ваше повідомлення записано.',
+  errMsg:'Не вдалося зберегти. Спробуйте ще раз за мить.',
+  offMsg:'Форма недоступна в цьому режимі перегляду, тож надіслати звідси не вийде.',
+  fullMsg:'Журнал повідомлень заповнений, тож нові наразі не зберігаються.',
+  slowMsg:'Забагато повідомлень поспіль. Зачекайте мить і спробуйте знову.',
+  emptyMsg:'Будь ласка, опишіть, що слід змінити.',
+  repsHead:'Надіслані повідомлення',
+  noReps:'Поки що повідомлень немає.',
+  footer:`Побудовано на <a href="https://www.wikidata.org" target="_blank" rel="noopener">Вікіданих</a> (CC0). Показники взято на момент останньої побудови сторінки й вони змінюються разом із Вікіданими. Це незалежний проєкт, а не офіційний реєстр.`
+ }
+};
+
+function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+function bars(rows){
+  const max=Math.max(...rows.map(r=>r[1]));
+  return `<div class="bars">`+rows.map(([lb,v])=>
+    `<div class="bar"><div class="lb">${esc(LANG==='uk'&&S.regionsUk[lb]?S.regionsUk[lb]:lb)}</div>`+
+    `<div class="track"><div class="fill" style="width:${(v/max*100).toFixed(1)}%"></div></div>`+
+    `<div class="vl">${nf(v)}</div></div>`).join('')+`</div>`;
+}
+
+function render(){
+  const t=T[LANG];
+  document.getElementById('ui-kicker').textContent=t.kicker;
+  document.getElementById('ui-title').innerHTML=t.title;
+  document.getElementById('ui-lede').textContent=t.lede;
+  document.getElementById('lk0').textContent=t.lk0;
+  document.getElementById('lk1').textContent=t.lk1;
+  document.getElementById('lk2').textContent=t.lk2;
+  document.getElementById('lk3').textContent=t.lk3;
+  document.getElementById('ui-footer').innerHTML=t.footer;
+  document.getElementById('lang-en').classList.toggle('on',LANG==='en');
+  document.getElementById('lang-uk').classList.toggle('on',LANG==='uk');
+
+  document.getElementById('main').innerHTML=`
+  <section><h2><span class="num">${t.s1n}</span>${t.s1t}</h2><div class="rule"></div>
+    ${t.s1.map(p=>`<p>${p}</p>`).join('')}</section>
+
+  <section><h2><span class="num">${t.s2n}</span>${t.s2t}</h2><div class="rule"></div>
+    ${t.s2.map(p=>`<p>${p}</p>`).join('')}</section>
+
+  <section><h2><span class="num">${t.s3n}</span>${t.s3t}</h2><div class="rule"></div>
+    <p>${t.s3a}</p>
+    <div class="branches">
+      ${t.branches.map(([n,d,c])=>`<div class="br"><div class="nm">${n}<em>${d}</em></div><div class="ct">${nf(c)}</div></div>`).join('')}
+      <div class="sum"><span class="nm">${t.sumLabel}</span><span class="ct">${nf(S.total)}</span></div>
+    </div>
+    <p>${t.s3b}</p></section>
+
+  <section><h2><span class="num">${t.s4n}</span>${t.s4t}</h2><div class="rule"></div>
+    ${t.s4.map(p=>`<p>${p}</p>`).join('')}
+    <div class="stats">
+      <div class="stat"><div class="v">${nf(S.total)}</div><div class="k">${LANG==='uk'?'у всесвіті':'in the universe'}</div></div>
+      <div class="stat"><div class="v">${nf(S.figures)}</div><div class="k">${LANG==='uk'?'показано на стрічці':'shown on the timeline'}</div></div>
+      <div class="stat"><div class="v">${nf(S.inUA)}</div><div class="k">${LANG==='uk'?'народжені в Україні':'born inside Ukraine'}</div></div>
+      <div class="stat"><div class="v">${nf(S.heroes)}</div><div class="k">${LANG==='uk'?'Героїв України':'Heroes of Ukraine'}</div></div>
+    </div></section>
+
+  <section><h2><span class="num">${t.s5n}</span>${t.s5t}</h2><div class="rule"></div>
+    <p>${t.s5}</p>
+    <div class="pages">${t.pages.map(([h,s,p])=>
+      `<div class="pg"><h3>${h}</h3><div class="sortby">${s}</div><p>${p}</p></div>`).join('')}</div></section>
+
+  <section><h2><span class="num">${t.s6n}</span>${t.s6t}</h2><div class="rule"></div>
+    <p>${t.s6}</p>
+    ${bars(S.regions)}
+    <p class="cap">${t.s6cap}</p></section>
+
+  <section><h2><span class="num">${t.s7n}</span>${t.s7t}</h2><div class="rule"></div>
+    ${t.limits.map(([h,p])=>`<div class="limit"><h4>${h}</h4><p>${p}</p></div>`).join('')}</section>
+
+  <section><h2><span class="num">${t.sAn}</span>${t.sAt}</h2><div class="rule"></div>
+    ${t.sA.map(p=>`<p>${p}</p>`).join('')}</section>
+
+  <section><h2><span class="num">${t.s8n}</span>${t.s8t}</h2><div class="rule"></div>
+    <p>${t.s8}</p>
+    <p>${t.s8b}</p>
+    <div class="form">
+      <div class="field"><label for="fKind">${t.fKind}</label>
+        <select id="fKind">${t.kinds.map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select></div>
+      <div class="field"><label for="fSubj">${t.fSubj}</label>
+        <input id="fSubj" type="text" maxlength="120" placeholder="${esc(t.subjPh)}"></div>
+      <div class="field"><label for="fMsg">${t.fMsg}</label>
+        <textarea id="fMsg" maxlength="1200" placeholder="${esc(t.msgPh)}"></textarea>
+        <div class="hint">${t.msgHint}</div></div>
+      <button class="submit" id="fSend">${t.send}</button>
+      <p class="note">${t.pubNote}</p>
+      <div class="status" id="fStatus"></div>
+    </div>
+    <div class="repsHead">${t.repsHead}</div>
+    <div class="reports" id="reports"></div>
+  </section>`;
+
+  document.getElementById('fSend').onclick=submit;
+  paintReports();
+  if(!DB && dbSettled) setStatus(T[LANG].offMsg,'err');
+}
+
+/* ---------- corrections: db capability ---------- */
+let DB=null, dbSettled=false, REPORTS=[], sending=false;
+
+function setStatus(msg,kind){
+  const el=document.getElementById('fStatus');
+  if(!el) return;
+  el.textContent=msg;
+  el.className='status on '+(kind||'');
+}
+function when(iso){
+  if(!iso) return '';
+  const d=new Date(iso);
+  if(isNaN(d)) return '';
+  return d.toLocaleDateString(LANG==='uk'?'uk-UA':'en-US',{year:'numeric',month:'short',day:'numeric'});
+}
+function kindLabel(k){
+  const f=T[LANG].kinds.find(x=>x[0]===k);
+  return f?f[1]:k;
+}
+function paintReports(){
+  const el=document.getElementById('reports');
+  if(!el) return;
+  if(!REPORTS.length){ el.innerHTML=`<p class="cap">${T[LANG].noReps}</p>`; return; }
+  el.innerHTML=REPORTS.map(r=>`
+    <div class="rep">
+      <div class="rh"><span class="kind">${esc(kindLabel(r.kind))}</span>
+        <span class="subj">${esc(r.subject||'')}</span>
+        <span class="when">${esc(when(r.at))}</span></div>
+      <div class="msg">${esc(r.message||'')}</div>
+    </div>`).join('');
+}
+
+async function submit(){
+  if(sending) return;
+  const t=T[LANG];
+  const kind=document.getElementById('fKind').value;
+  const subject=document.getElementById('fSubj').value.trim().slice(0,120);
+  const message=document.getElementById('fMsg').value.trim().slice(0,1200);
+  if(!message){ setStatus(t.emptyMsg,'err'); return; }
+  if(!DB){ setStatus(t.offMsg,'err'); return; }
+  sending=true;
+  const btn=document.getElementById('fSend');
+  btn.disabled=true; btn.textContent=t.sending;
+  try{
+    await DB.collection('reports').add({
+      kind, subject, message, lang:LANG, at:new Date().toISOString()
+    });
+    document.getElementById('fSubj').value='';
+    document.getElementById('fMsg').value='';
+    setStatus(t.okMsg,'ok');
+  }catch(e){
+    const c=e&&e.code;
+    setStatus(c==='quota_exceeded'?t.fullMsg
+             :c==='resource_exhausted'?t.slowMsg
+             :(c==='not_granted'||c==='capability_disabled'||c==='revoked')?t.offMsg
+             :t.errMsg,'err');
+  }finally{
+    sending=false;
+    btn.disabled=false; btn.textContent=t.send;
+  }
+}
+
+document.getElementById('lang-en').onclick=()=>{LANG='en';try{localStorage.setItem('pantheon-lang','en')}catch(e){};render();};
+document.getElementById('lang-uk').onclick=()=>{LANG='uk';try{localStorage.setItem('pantheon-lang','uk')}catch(e){};render();};
+render();
+
+/* The page is complete without db; the form lights up only if this view grants it.
+   Outside the artifact viewer window.claude does not exist at all. */
+const useDb = (typeof window!=='undefined' && window.claude && typeof window.claude.use==='function')
+  ? window.claude.use('db')
+  : Promise.resolve(null);
+useDb.then(db=>{
+  dbSettled=true;
+  DB=db;
+  if(!db){ setStatus(T[LANG].offMsg,'err'); return; }
+  db.collection('reports').orderBy('at','desc').limit(40).onSnapshot(
+    snap=>{ REPORTS=snap.docs.map(d=>d.data()); paintReports(); },
+    ()=>{}
+  );
+}).catch(()=>{ dbSettled=true; });
+</script>
