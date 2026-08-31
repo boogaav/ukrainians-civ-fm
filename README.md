@@ -1,4 +1,4 @@
-# ukraine.civ.fm — Ukrainians
+# ukrainians.civ.fm — Ukrainians
 
 A record of everyone who made Ukraine: 110,921 lives drawn from Wikidata,
 arranged by time, by origin, by field, and by state honour.
